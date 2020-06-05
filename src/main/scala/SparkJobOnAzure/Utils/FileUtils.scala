@@ -2,11 +2,7 @@ package SparkJobOnAzure.Utils
 
 import java.io.{File, PrintWriter}
 
-import org.apache.spark.SparkContext
-import org.apache.spark.sql.types.{DataType, StructType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
-
-import scala.io.Source
 
 object FileUtils {
 
