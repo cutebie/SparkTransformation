@@ -11,8 +11,10 @@ object SparkJobDemo {
   val outContainerName = "level3"
   val configContainerName = "config"
   val storageAccountName = "aqstoragetransform"
+
   val keyvault_scope = "sparkjob"
   val keyvault_secret = "secret-sas-storagetransform"
+
   val old_colname = "cc"
   val new_colname = "cc_mod"
 
@@ -23,6 +25,14 @@ object SparkJobDemo {
   val default_config_path = "config.json"
 
   private var sasToken = ""
+
+  // use wasbs url instead of dbutils.fs.mount
+  val wasbs_in_URL = "wasbs://" + inContainerName + "@" + storageAccountName + ".blob.core.windows.net/"
+  val wasbs_out_URL = "wasbs://" + outContainerName + "@" + storageAccountName + ".blob.core.windows.net/"
+  val wasbs_config_URL = "wasbs://" + configContainerName + "@" + storageAccountName + ".blob.core.windows.net/"
+  val keyvault_storage_accesskey_secret = "secret-accesskey-storagetransform"
+
+  private var storage_accesskey = ""
 
   // to print out sample command for help
   def help() {
@@ -42,12 +52,18 @@ object SparkJobDemo {
       println("Successfully initializing ... ")
 
       val parsedArgs = parseArgs(args)
-      val inputFilePath = basedir + inContainerName + "/" + parsedArgs._1
+      /*val inputFilePath = basedir + inContainerName + "/" + parsedArgs._1
       val expectedSchemaPath = basedir + configContainerName + "/" + parsedArgs._2
       val outputFilePath = basedir + outContainerName + "/" + parsedArgs._3
+      */
+
+      // use wasbs url instead of dbutils.fs.mount
+      val inputFilePath = wasbs_in_URL + parsedArgs._1
+      val expectedSchemaPath = wasbs_config_URL + parsedArgs._2
+      val outputFilePath = wasbs_out_URL + parsedArgs._3
 
       // read the parquet file
-      println("Read the file as" + inputFilePath)
+      println("Read the file as " + inputFilePath)
       val inDF:DataFrame = FileUtils.readFromFile(spark,inputFilePath,"parquet")
       if (inDF == null) {
         println("Failed to read from file")
@@ -55,7 +71,7 @@ object SparkJobDemo {
       }
 
       // validate schema of the input DataFrame
-      println("Validate schema of " + inputFilePath + " using " + expectedSchemaPath)
+      println("Validate schema of " + expectedSchemaPath)
       if (!Transformation.TransformedDataFrame.isValidateSchema(expectedSchemaPath, inDF.schema)) {
         println("Failed to validate the expected schema")
         return
@@ -94,7 +110,7 @@ object SparkJobDemo {
         //.master("spark://192.168.94.160:7077")
         .appName("SparkTransformation")
         .getOrCreate()
-*/
+    */
 
     // The DataBricks does have its SpartSession and SparkContext so that need to reuse them
     println("init() - get spark session and spark context")
@@ -103,8 +119,14 @@ object SparkJobDemo {
     val sc = SparkContext.getOrCreate()
     sc.setLogLevel("ERROR")
 
-    println("init() - start getting sas token")
-    sasToken = DatabricksUtils.getSAS(keyvault_scope, keyvault_secret)
+    println("init() - start getting storage access key ")
+    storage_accesskey = DatabricksUtils.getSecret(keyvault_scope, keyvault_storage_accesskey_secret)
+    spark.conf.set("fs.azure.account.key." + storageAccountName + ".blob.core.windows.net", storage_accesskey)
+
+    // use wasbs url instead of dbutils.fs.mount
+    /*
+    println("init() - start getting storage sas token")
+    sasToken = DatabricksUtils.getSecret(keyvault_scope, keyvault_secret)
 
     println("init() - mount to " + basedir + inContainerName)
     var retVal = DatabricksUtils.mountToPath(inContainerName, storageAccountName, sasToken)
@@ -123,6 +145,7 @@ object SparkJobDemo {
     if (retVal != true) {
       null
     }
+    */
 
     println("init() - Ending")
     spark
@@ -130,12 +153,13 @@ object SparkJobDemo {
 
 
   def cleanup() {
-    println("Unmount the input path: " + basedir + inContainerName)
+    // use wasbs url instead of dbutils.fs.mount
+    /*println("Unmount the input path: " + basedir + inContainerName)
     DatabricksUtils.unMountToPath(basedir + inContainerName)
     println("Unmount the config path: " + basedir + configContainerName)
     DatabricksUtils.unMountToPath(basedir + configContainerName)
     println("Unmount the output path: " + basedir + outContainerName)
-    DatabricksUtils.unMountToPath(basedir + outContainerName)
+    DatabricksUtils.unMountToPath(basedir + outContainerName)*/
     println("Complete the SparkTranformation job")
   }
 
