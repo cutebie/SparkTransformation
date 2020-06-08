@@ -60,9 +60,11 @@ object TransformedDataFrame {
     var retVal = true
 
     // val url = ClassLoader.getSystemResource(expectedSchemaPath)
-    // Source.fromFile causes FILE NOT FOUND if not using /dbfs
-    val expectedSchemaPath_upd = "/dbfs" + expectedSchemaPath
-    val schemaSource = Source.fromFile(expectedSchemaPath_upd).getLines.mkString
+    // Source.fromFile causes FILE NOT FOUND if not using /dbfs after dbutils.fs.mount()
+    //val expectedSchemaPath_upd = "/dbfs" + expectedSchemaPath
+    // use wasbs url instead of dbutils.fs.mount so that don't need to append /dbfs
+    //val url = ClassLoader.getSystemResource(expectedSchemaPath)
+    val schemaSource = Source.fromFile(expectedSchemaPath).getLines.mkString
     val schemaFromJson = DataType.fromJson(schemaSource).asInstanceOf[StructType]
     //println(schemaFromJson.treeString)
 
