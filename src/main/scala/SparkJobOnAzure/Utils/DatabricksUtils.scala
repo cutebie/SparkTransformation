@@ -25,7 +25,7 @@ object DatabricksUtils {
     val typeAction = args(0)
     val containerName = args(1)
 
-    val sasStr = getSAS(keyvault_scope, keyvault_secret)
+    val sasStr = getSecret(keyvault_scope, keyvault_secret)
     println(sasStr)
 
     var retVal: Boolean = true
@@ -54,7 +54,7 @@ object DatabricksUtils {
   }
 
   // to get SAS of a storage account. SAS is stored as the value in the secret of key-vault
-  def getSAS(keyvault_scope:String, keyvault_secret:String):String = {
+  def getSecret(keyvault_scope:String, keyvault_secret:String):String = {
     val sasToken = dbutils.secrets.get(scope = keyvault_scope, key = keyvault_secret)
     sasToken
   }
